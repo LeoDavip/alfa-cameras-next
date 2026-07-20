@@ -1,10 +1,13 @@
 import { NextRequest } from "next/server";
 import { queryMany, queryOne } from "@/lib/db";
-import { verificarToken } from "@/lib/auth";
+import { verificarTokenDeRequest } from "@/lib/auth";
 import { Plano } from "@/types";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const payload = verificarTokenDeRequest(request);
+    if (!payload) return Response.json({ error: "Não autenticado" }, { status: 401 });
+
     const planos = await queryMany<Plano>("SELECT * FROM planos WHERE ativo = true ORDER BY preco_mensal");
     return Response.json(planos);
   } catch (error) {
@@ -15,9 +18,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) return Response.json({ error: "N\u00e3o autenticado" }, { status: 401 });
-    verificarToken(authHeader.replace("Bearer ", ""));
+    const payload = verificarTokenDeRequest(request);
+    if (!payload) return Response.json({ error: "Não autenticado" }, { status: 401 });
 
     const body = await request.json();
     const plano = await queryOne<Plano>(

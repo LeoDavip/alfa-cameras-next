@@ -1,10 +1,33 @@
 "use client";
 import { Orcamento } from "@/types";
 import { gerarLinkWhatsApp } from "@/lib/whatsapp";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Link from "next/link";
 
 export function CartaoOrcamento({ orcamento }: { orcamento: Orcamento }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const mensagem = `Olá ${orcamento.cliente_nome}! Seu orçamento ficou em R$ ${orcamento.total.toFixed(2)}.`;
   const linkWhatsApp = gerarLinkWhatsApp(orcamento.cliente_telefone, mensagem);
+
+  async function atualizarStatus(novoStatus: "enviado" | "faturado") {
+    setLoading(true);
+    await fetch(`/api/orcamentos/${orcamento.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: novoStatus }),
+    });
+    router.refresh();
+  }
+
+  async function handleExcluir() {
+    if (!confirm("Tem certeza que deseja excluir este orçamento?")) return;
+    setDeleting(true);
+    await fetch(`/api/orcamentos/${orcamento.id}`, { method: "DELETE" });
+    router.push("/orcamentos");
+  }
 
   return (
     <div className="border rounded-lg p-6 space-y-4">
@@ -49,7 +72,7 @@ export function CartaoOrcamento({ orcamento }: { orcamento: Orcamento }) {
         </tfoot>
       </table>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <a
           href={linkWhatsApp}
           target="_blank"
@@ -58,11 +81,37 @@ export function CartaoOrcamento({ orcamento }: { orcamento: Orcamento }) {
         >
           Enviar via WhatsApp
         </a>
+        <Link
+          href={`/orcamentos/${orcamento.id}/editar`}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium"
+        >
+          Editar
+        </Link>
         {orcamento.status === "rascunho" && (
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm">
-            Marcar como Enviado
+          <button
+            onClick={() => atualizarStatus("enviado")}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm disabled:opacity-50"
+          >
+            {loading ? "Atualizando..." : "Marcar como Enviado"}
           </button>
         )}
+        {orcamento.status === "enviado" && (
+          <button
+            onClick={() => atualizarStatus("faturado")}
+            disabled={loading}
+            className="px-4 py-2 bg-green-700 text-white rounded-md text-sm disabled:opacity-50"
+          >
+            {loading ? "Atualizando..." : "Marcar como Faturado"}
+          </button>
+        )}
+        <button
+          onClick={handleExcluir}
+          disabled={deleting}
+          className="px-4 py-2 bg-red-600 text-white rounded-md text-sm disabled:opacity-50"
+        >
+          {deleting ? "Excluindo..." : "Excluir"}
+        </button>
       </div>
     </div>
   );

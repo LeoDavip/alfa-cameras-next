@@ -5,7 +5,7 @@ const CLIENT_ID = process.env.RD_STATION_CLIENT_ID;
 const CLIENT_SECRET = process.env.RD_STATION_CLIENT_SECRET;
 const REDIRECT_URI = process.env.RD_STATION_REDIRECT_URI;
 
-let accessToken: string | null = null;
+const accessToken: string | null = null;
 
 export function getAuthUrl(): string {
   return `https://api.rd.services/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;

@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
 import { queryMany } from "@/lib/db";
-import { verificarToken } from "@/lib/auth";
+import { verificarTokenDeRequest } from "@/lib/auth";
 import { Produto } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) return Response.json({ error: "N\u00e3o autenticado" }, { status: 401 });
-    verificarToken(authHeader.replace("Bearer ", ""));
+    const payload = verificarTokenDeRequest(request);
+    if (!payload) return Response.json({ error: "Não autenticado" }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
     const marca = searchParams.get("marca");

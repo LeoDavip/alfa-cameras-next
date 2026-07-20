@@ -88,3 +88,36 @@ export async function atualizarStatus(id: number, status: OrcamentoStatus): Prom
   await query(`UPDATE orcamentos SET ${fields.join(", ")} WHERE id = $${idx}`, params);
   return buscarOrcamento(id);
 }
+
+interface UpdateOrcamentoInput {
+  cliente_nome: string;
+  cliente_telefone: string;
+  cliente_endereco?: string;
+  items: Omit<OrcamentoItem, "id" | "orcamento_id" | "total">[];
+}
+
+export async function atualizarOrcamento(id: number, input: UpdateOrcamentoInput): Promise<Orcamento | null> {
+  const total = calcularTotal(input.items);
+
+  await query(
+    `UPDATE orcamentos SET cliente_nome = $1, cliente_telefone = $2, cliente_endereco = $3, total = $4, updated_at = NOW() WHERE id = $5`,
+    [input.cliente_nome, input.cliente_telefone, input.cliente_endereco || null, total, id]
+  );
+
+  await query("DELETE FROM orcamento_items WHERE orcamento_id = $1", [id]);
+
+  for (const item of input.items) {
+    await query(
+      `INSERT INTO orcamento_items (orcamento_id, descricao, quantidade, valor_unitario, total, tipo)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [id, item.descricao, item.quantidade, item.valor_unitario, item.quantidade * item.valor_unitario, item.tipo]
+    );
+  }
+
+  return buscarOrcamento(id);
+}
+
+export async function excluirOrcamento(id: number): Promise<boolean> {
+  const result = await query("DELETE FROM orcamentos WHERE id = $1", [id]);
+  return (result.rowCount ?? 0) > 0;
+}

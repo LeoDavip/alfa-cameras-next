@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { Orcamento } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -8,6 +9,8 @@ interface TabelaOrcamentosProps {
 }
 
 export function TabelaOrcamentos({ orcamentos }: TabelaOrcamentosProps) {
+  const router = useRouter();
+
   if (orcamentos.length === 0) {
     return <p className="text-muted-foreground">Nenhum orçamento encontrado.</p>;
   }
@@ -26,7 +29,11 @@ export function TabelaOrcamentos({ orcamentos }: TabelaOrcamentosProps) {
         </thead>
         <tbody>
           {orcamentos.map((orc) => (
-            <tr key={orc.id} className="border-t hover:bg-muted/50">
+            <tr
+              key={orc.id}
+              onClick={() => router.push(`/orcamentos/${orc.id}`)}
+              className="border-t hover:bg-muted/50 cursor-pointer"
+            >
               <td className="p-3">{orc.id}</td>
               <td className="p-3">{orc.cliente_nome}</td>
               <td className="p-3">R$ {orc.total.toFixed(2)}</td>

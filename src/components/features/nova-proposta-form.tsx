@@ -5,12 +5,18 @@ import { ProdutoSelector } from "./produto-selector";
 
 interface NovaPropostaFormProps {
   produtos: Produto[];
+  orcamentoId?: number;
+  initialData?: {
+    cliente_nome: string;
+    cliente_telefone: string;
+    items: OrcamentoItem[];
+  };
 }
 
-export function NovaPropostaForm({ produtos }: NovaPropostaFormProps) {
-  const [clienteNome, setClienteNome] = useState("");
-  const [clienteTelefone, setClienteTelefone] = useState("");
-  const [items, setItems] = useState<OrcamentoItem[]>([]);
+export function NovaPropostaForm({ produtos, orcamentoId, initialData }: NovaPropostaFormProps) {
+  const [clienteNome, setClienteNome] = useState(initialData?.cliente_nome ?? "");
+  const [clienteTelefone, setClienteTelefone] = useState(initialData?.cliente_telefone ?? "");
+  const [items, setItems] = useState<OrcamentoItem[]>(initialData?.items ?? []);
   const [loading, setLoading] = useState(false);
 
   function addItem(produto: Produto) {
@@ -44,8 +50,10 @@ export function NovaPropostaForm({ produtos }: NovaPropostaFormProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/orcamentos", {
-        method: "POST",
+      const method = orcamentoId ? "PATCH" : "POST";
+      const url = orcamentoId ? `/api/orcamentos/${orcamentoId}` : "/api/orcamentos";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cliente_nome: clienteNome,
@@ -57,7 +65,7 @@ export function NovaPropostaForm({ produtos }: NovaPropostaFormProps) {
       });
 
       if (res.ok) {
-        window.location.href = "/orcamentos";
+        window.location.href = orcamentoId ? `/orcamentos/${orcamentoId}` : "/orcamentos";
       }
     } finally {
       setLoading(false);
@@ -119,7 +127,7 @@ export function NovaPropostaForm({ produtos }: NovaPropostaFormProps) {
         disabled={loading || items.length === 0}
         className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium disabled:opacity-50"
       >
-        {loading ? "Salvando..." : "Salvar Orçamento"}
+        {loading ? "Salvando..." : orcamentoId ? "Atualizar Orçamento" : "Salvar Orçamento"}
       </button>
     </form>
   );
