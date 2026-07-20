@@ -5,14 +5,16 @@ import { Usuario } from "@/types";
 import { query } from "./db";
 import { NextRequest } from "next/server";
 
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
-}
-const JWT_SECRET = process.env.JWT_SECRET;
 const ACCESS_TOKEN_EXPIRY = "15m";
 export const REFRESH_TOKEN_EXPIRY_DAYS = 7;
-
 const LOGIN_RATE_LIMIT = 5;
+
+function getJwtSecret(): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return process.env.JWT_SECRET;
+}
 
 export async function verificarRateLimit(email: string): Promise<boolean> {
   const { rows } = await query(
@@ -33,7 +35,7 @@ export async function registrarTentativa(email: string, sucesso: boolean) {
 export function gerarToken(usuario: Pick<Usuario, "id" | "nome" | "email" | "role">): string {
   return jwt.sign(
     { id: usuario.id, nome: usuario.nome, email: usuario.email, role: usuario.role },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: ACCESS_TOKEN_EXPIRY }
   );
 }
@@ -47,7 +49,7 @@ export function hashToken(token: string): string {
 }
 
 export function verificarToken(token: string): jwt.JwtPayload {
-  return jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+  return jwt.verify(token, getJwtSecret()) as jwt.JwtPayload;
 }
 
 export function verificarTokenDeRequest(request: NextRequest): jwt.JwtPayload | null {
