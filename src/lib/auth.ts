@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { Usuario } from "@/types";
 import { query } from "./db";
+import { NextRequest } from "next/server";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is required");
@@ -47,6 +48,16 @@ export function hashToken(token: string): string {
 
 export function verificarToken(token: string): jwt.JwtPayload {
   return jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+}
+
+export function verificarTokenDeRequest(request: NextRequest): jwt.JwtPayload | null {
+  const token = request.cookies.get("token")?.value;
+  if (!token) return null;
+  try {
+    return verificarToken(token);
+  } catch {
+    return null;
+  }
 }
 
 export async function hashSenha(senha: string): Promise<string> {
