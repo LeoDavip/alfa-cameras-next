@@ -16,6 +16,9 @@ function getJwtSecret(): string {
   return process.env.JWT_SECRET;
 }
 
+export const LOCKOUT_THRESHOLD = 5;
+export const LOCKOUT_WINDOW_MINUTES = 5;
+
 export async function verificarRateLimit(email: string): Promise<boolean> {
   const { rows } = await query(
     `SELECT COUNT(*) as count FROM login_attempts
@@ -25,11 +28,24 @@ export async function verificarRateLimit(email: string): Promise<boolean> {
   return Number(rows[0].count) < LOGIN_RATE_LIMIT;
 }
 
+export async function verificarLockout(email: string): Promise<boolean> {
+  const { rows } = await query(
+    `SELECT COUNT(*) as count FROM login_attempts
+     WHERE email = $1 AND sucesso = false AND attempted_at > NOW() - INTERVAL '${LOCKOUT_WINDOW_MINUTES} minutes'`,
+    [email]
+  );
+  return Number(rows[0].count) < LOCKOUT_THRESHOLD;
+}
+
 export async function registrarTentativa(email: string, sucesso: boolean) {
   await query(
     "INSERT INTO login_attempts (email, sucesso, attempted_at) VALUES ($1, $2, NOW())",
     [email, sucesso]
   );
+}
+
+export async function limparTentativas(email: string) {
+  await query("DELETE FROM login_attempts WHERE email = $1", [email]);
 }
 
 export function gerarToken(usuario: Pick<Usuario, "id" | "nome" | "email" | "role">): string {

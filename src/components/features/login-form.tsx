@@ -3,16 +3,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem("email") as HTMLInputElement)?.value ?? "";
+    const password = (form.elements.namedItem("password") as HTMLInputElement)?.value ?? "";
+
+    console.log("📤 Enviando:", { email, passLen: password.length });
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -41,9 +45,9 @@ export function LoginForm() {
         <label htmlFor="email" className="text-sm font-medium">Email</label>
         <input
           id="email"
+          name="email"
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
           className="w-full px-3 py-2 border rounded-md"
           required
         />
@@ -52,9 +56,9 @@ export function LoginForm() {
         <label htmlFor="password" className="text-sm font-medium">Senha</label>
         <input
           id="password"
+          name="password"
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
           className="w-full px-3 py-2 border rounded-md"
           required
         />
