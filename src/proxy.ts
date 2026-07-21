@@ -16,7 +16,7 @@ export function proxy(request: Parameters<NextProxy>[0]) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", request.url), 302);
   }
 
   return NextResponse.next();

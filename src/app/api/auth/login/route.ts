@@ -5,7 +5,7 @@ import { Usuario } from "@/types";
 
 function redirectToLogin(error: string, request: NextRequest): NextResponse {
   const base = new URL(request.url);
-  return NextResponse.redirect(new URL(`/login?error=${error}`, base.origin));
+  return NextResponse.redirect(new URL(`/login?error=${error}`, base.origin), 302);
 }
 
 export async function POST(request: NextRequest) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
     if (acceptsHtml) {
-      const response = NextResponse.redirect(new URL("/dashboard", request.url));
+      const response = NextResponse.redirect(new URL("/dashboard", request.url), 302);
       response.cookies.set("token", token, {
         httpOnly: true,
         secure: true,
