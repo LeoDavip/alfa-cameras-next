@@ -1,3 +1,5 @@
+import LoginHandler from "@/components/features/login-handler"
+
 export default async function LoginPage(props: { searchParams?: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams;
   const error = searchParams?.error;
@@ -46,45 +48,7 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
           </button>
         </form>
       </div>
-      <script dangerouslySetInnerHTML={{ __html: `
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-          e.preventDefault();
-          var btn = this.querySelector('button');
-          var oldErr = document.getElementById('login-error');
-          if (oldErr) oldErr.remove();
-          btn.disabled = true;
-          btn.textContent = 'Entrando...';
-
-          try {
-            var res = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams(new FormData(this)).toString()
-            });
-            if (res.ok) {
-              var data = await res.json();
-              document.cookie = 'token=' + data.token + '; path=/; max-age=900; SameSite=Lax';
-              window.location.href = '/dashboard';
-            } else {
-              var data = await res.json();
-              var p = document.createElement('p');
-              p.id = 'login-error';
-              p.className = 'text-sm text-red-500';
-              p.textContent = data.error || 'Erro ao fazer login';
-              btn.parentNode.insertBefore(p, btn);
-            }
-          } catch(ex) {
-            var p = document.createElement('p');
-            p.id = 'login-error';
-            p.className = 'text-sm text-red-500';
-            p.textContent = 'Erro de conexão';
-            btn.parentNode.insertBefore(p, btn);
-          } finally {
-            btn.disabled = false;
-            btn.textContent = 'Entrar';
-          }
-        });
-      ` }} />
+      <LoginHandler />
     </div>
   );
 }
