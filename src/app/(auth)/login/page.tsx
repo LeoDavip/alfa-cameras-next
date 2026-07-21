@@ -62,6 +62,8 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
               body: new URLSearchParams(new FormData(this)).toString()
             });
             if (res.ok) {
+              var data = await res.json();
+              document.cookie = 'token=' + data.token + '; path=/; max-age=900; SameSite=Lax';
               window.location.href = '/dashboard';
             } else {
               var data = await res.json();
