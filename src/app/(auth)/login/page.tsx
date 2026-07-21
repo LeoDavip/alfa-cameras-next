@@ -1,5 +1,3 @@
-import LoginHandler from "@/components/features/login-handler"
-
 export default async function LoginPage(props: { searchParams?: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams;
   const error = searchParams?.error;
@@ -16,7 +14,7 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
     <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="bg-background p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-6">Alfa Câmeras</h1>
-        <form id="login-form" method="POST" className="space-y-4">
+        <form id="login-form" action="/api/auth/login" method="POST" className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">Email</label>
             <input
@@ -48,7 +46,6 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
           </button>
         </form>
       </div>
-      <LoginHandler />
     </div>
   );
 }
