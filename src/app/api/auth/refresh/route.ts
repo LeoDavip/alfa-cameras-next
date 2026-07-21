@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
-import { gerarToken, gerarRefreshToken, hashToken, verificarToken } from "@/lib/auth";
+import { gerarToken, gerarRefreshToken, hashToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +43,15 @@ export async function POST(request: NextRequest) {
       [stored.usuario_id, newHashed]
     );
 
-    return Response.json({ token: newToken, refreshToken: newRefreshToken });
+    const response = NextResponse.json({ token: newToken, refreshToken: newRefreshToken });
+    response.cookies.set("token", newToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 15 * 60,
+      path: "/",
+    });
+    return response;
   } catch (error) {
     console.error("Refresh error:", error);
     return Response.json({ error: "Erro interno" }, { status: 500 });

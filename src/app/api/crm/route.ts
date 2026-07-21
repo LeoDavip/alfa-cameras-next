@@ -1,8 +1,5 @@
-import { NextRequest } from "next/server";
-
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    const body = await request.json();
     return Response.json({ message: "CRM sync triggered" });
   } catch (error) {
     console.error("POST /crm error:", error);

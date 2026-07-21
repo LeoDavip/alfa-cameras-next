@@ -107,7 +107,7 @@ Mesmo schema PostgreSQL do sistema atual (Neon). 7 tabelas mantidas:
 npx vercel --prod
 ```
 
-Cron jobs estão configurados no `vercel.json`. O middleware (`middleware.ts`) precisa ser migrado para `proxy` quando o Next.js 16 remover o suporte legado (atualmente mostra warning mas funciona).
+Cron jobs estão configurados no `vercel.json`. O middleware foi migrado para `src/proxy.ts` (exportando `proxy` em vez de `middleware`) conforme exigido pelo Next.js 16.
 
 ---
 

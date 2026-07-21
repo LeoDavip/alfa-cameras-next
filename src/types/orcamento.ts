@@ -1,4 +1,4 @@
-export type OrcamentoStatus = "rascunho" | "enviado" | "faturado";
+export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "instalado" | "faturado" | "pago" | "vencido";
 
 export interface OrcamentoItem {
   id?: number;
@@ -23,6 +23,17 @@ export interface Orcamento {
   created_at: string;
   updated_at?: string;
   enviado_em?: string;
+  aprovado_em?: string;
+  recusado_em?: string;
+  instalado_em?: string;
   faturado_em?: string;
+  pago_em?: string;
+  vencido_em?: string;
+  deleted_at?: string;
+  telegram_message_id?: number;
+  crm_deal_id?: string;
+  subtotal_equip?: number;
+  subtotal_servicos?: number;
+  data?: string;
   link_whatsapp?: string;
 }

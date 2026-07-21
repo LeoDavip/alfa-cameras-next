@@ -24,6 +24,7 @@ export default async function EditarOrcamentoPage({ params }: { params: Promise<
         initialData={{
           cliente_nome: orcamento.cliente_nome,
           cliente_telefone: orcamento.cliente_telefone,
+          data: orcamento.data,
           items: orcamento.items,
         }}
       />

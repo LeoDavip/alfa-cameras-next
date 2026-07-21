@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import type { NextProxy } from "next/server";
 
 const publicRoutes = ["/login", "/api/auth/login", "/api/auth/refresh", "/api/health"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: Parameters<NextProxy>[0]) {
   const { pathname } = request.nextUrl;
 
   if (publicRoutes.some((route) => pathname.startsWith(route))) {

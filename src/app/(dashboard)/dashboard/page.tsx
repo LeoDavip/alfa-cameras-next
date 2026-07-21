@@ -1,28 +1,81 @@
-import { query } from "@/lib/db";
+import { queryMany, queryOne } from "@/lib/db";
+import Link from "next/link";
 import { DashboardKPIs } from "@/components/features/dashboard-kpis";
+import { StatusChart } from "@/components/features/status-chart";
+import { OrcamentosRecentes } from "@/components/features/orcamentos-recentes";
 
 export default async function DashboardPage() {
-  const totalOrcamentos = await query("SELECT COUNT(*) as count FROM orcamentos");
-  const totalFaturado = await query("SELECT COALESCE(SUM(total), 0) as total FROM orcamentos WHERE status = 'faturado'");
-  const orcamentosPendentes = await query("SELECT COUNT(*) as count FROM orcamentos WHERE status = 'enviado'");
-  const total = await query("SELECT COUNT(*) as count FROM orcamentos");
-  const faturados = await query("SELECT COUNT(*) as count FROM orcamentos WHERE status = 'faturado'");
+  const [stats, statusCounts, recentes, clientes] = await Promise.all([
+    queryOne<{
+      total: number;
+      valor_aberto: number;
+      valor_faturado: number;
+      enviados: number;
+      aprovados: number;
+    }>(
+      `SELECT
+        COUNT(*)::int as total,
+        COALESCE(SUM(CASE WHEN status = 'enviado' THEN total END), 0) as valor_aberto,
+        COALESCE(SUM(CASE WHEN status = 'faturado' THEN total END), 0) as valor_faturado,
+        COUNT(*) FILTER (WHERE status = 'enviado')::int as enviados,
+        COUNT(*) FILTER (WHERE status = 'aprovado')::int as aprovados
+       FROM orcamentos WHERE deleted_at IS NULL`
+    ),
+    queryMany<{ status: string; count: number }>(
+      `SELECT status, COUNT(*)::int as count
+       FROM orcamentos WHERE deleted_at IS NULL
+       GROUP BY status ORDER BY count DESC`
+    ),
+    queryMany<{
+      id: number;
+      cliente_nome: string;
+      total: number;
+      status: string;
+      created_at: string;
+    }>(
+      `SELECT id, cliente_nome, total, status, created_at
+       FROM orcamentos WHERE deleted_at IS NULL
+       ORDER BY created_at DESC LIMIT 5`
+    ),
+    queryOne<{ total: number }>(
+      `SELECT COUNT(DISTINCT cliente_nome)::int as total
+       FROM orcamentos WHERE deleted_at IS NULL`
+    ),
+  ]);
 
-  const totalCount = Number(total.rows[0].count);
-  const faturadoCount = Number(faturados.rows[0].count);
-  const taxaConversao = totalCount > 0 ? Math.round((faturadoCount / totalCount) * 100) : 0;
+  const enviados = Number(stats?.enviados || 0);
+  const aprovados = Number(stats?.aprovados || 0);
+  const taxaConversao = (enviados + aprovados) > 0
+    ? Math.round((aprovados / (enviados + aprovados)) * 100)
+    : 0;
 
   const kpis = {
-    totalOrcamentos: Number(totalOrcamentos.rows[0].count),
-    totalFaturado: Number(totalFaturado.rows[0].total),
+    totalOrcamentos: Number(stats?.total || 0),
+    valorEmAberto: Number(stats?.valor_aberto || 0),
+    totalFaturado: Number(stats?.valor_faturado || 0),
     taxaConversao,
-    orcamentosPendentes: Number(orcamentosPendentes.rows[0].count),
+    totalClientes: Number(clientes?.total || 0),
+    orcamentosPendentes: enviados,
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <Link
+          href="/orcamentos/novo"
+          className="px-4 py-2 bg-red-600 text-white rounded-md font-bold hover:bg-red-700 text-sm"
+        >
+          + Nova Proposta
+        </Link>
+      </div>
+
       <DashboardKPIs kpis={kpis} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StatusChart data={statusCounts} />
+        <OrcamentosRecentes orcamentos={recentes} />
+      </div>
     </div>
   );
 }

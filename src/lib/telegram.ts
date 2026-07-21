@@ -8,6 +8,11 @@ interface TelegramResponse {
   description?: string;
 }
 
+export interface InlineKeyboardButton {
+  text: string;
+  callback_data: string;
+}
+
 const TOPICS = {
   arquivos: Number(process.env.TELEGRAM_TOPIC_ARQUIVOS) || undefined,
   orcamentos: Number(process.env.TELEGRAM_TOPIC_ORCAMENTOS) || undefined,
@@ -22,6 +27,10 @@ async function call(method: string, body: Record<string, unknown>): Promise<Tele
     body: JSON.stringify(body),
   });
   return res.json();
+}
+
+export function esc(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export async function sendMessage(chatId: string | number, text: string, options?: Record<string, unknown>) {
@@ -45,4 +54,41 @@ export async function notify(topic: keyof typeof TOPICS, text: string) {
   const body: Record<string, unknown> = { chat_id: getChatId(), text, parse_mode: "HTML" };
   if (TOPICS[topic]) body.message_thread_id = TOPICS[topic];
   return call("sendMessage", body);
+}
+
+export async function sendInlineKeyboard(
+  text: string,
+  buttons: InlineKeyboardButton[][],
+  topicId?: number
+) {
+  const body: Record<string, unknown> = {
+    chat_id: getChatId(),
+    text,
+    parse_mode: "HTML",
+    reply_markup: { inline_keyboard: buttons },
+  };
+  if (topicId) body.message_thread_id = topicId;
+  return call("sendMessage", body);
+}
+
+export async function editMessageText(
+  chatId: string | number,
+  messageId: number,
+  text: string,
+  buttons?: InlineKeyboardButton[][]
+) {
+  const body: Record<string, unknown> = {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: "HTML",
+  };
+  if (buttons) body.reply_markup = { inline_keyboard: buttons };
+  return call("editMessageText", body);
+}
+
+export async function answerCallbackQuery(callbackQueryId: string, text?: string) {
+  const body: Record<string, unknown> = { callback_query_id: callbackQueryId };
+  if (text) body.text = text;
+  return call("answerCallbackQuery", body);
 }
