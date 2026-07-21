@@ -62,8 +62,14 @@ export async function POST(request: NextRequest) {
 
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
     if (acceptsHtml) {
-      const response = new Response(null, { status: 302, headers: { location: "/dashboard" } });
-      response.headers.set("set-cookie", `token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=900`);
+      const response = NextResponse.redirect(new URL("/dashboard", request.url));
+      response.cookies.set("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        maxAge: 15 * 60,
+        path: "/",
+      });
       return response;
     }
 
